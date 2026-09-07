@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knirpz Streams - Dashboard</title>
+    <style>
+        :root {
+            --bg-color: #0f0f13;
+            --card-bg: #18181b;
+            --header-bg: #1f1f23;
+            --hover-bg: #26262c;
+            --accent-color: #9146ff;
+            --text-color: #efeff1;
+            --text-muted: #adadb8;
+            --border-color: #2f2f35;
+        }
+
+        body {
+            font-family: Inter, Roobert, "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px 12px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 1500px;
+            width: 100%;
+        }
+
+        .header-box {
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        h1 span {
+            color: var(--accent-color);
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin: 24px 0 12px 0;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 16px;
+            background-color: var(--accent-color);
+            border-radius: 2px;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .filter-group label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .filter-group label:hover {
+            color: var(--text-color);
+        }
+
+        .filter-group input[type="checkbox"] {
+            accent-color: var(--accent-color);
+            cursor: pointer;
+            width: 15px;
+            height: 15px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            text-align: left;
+            font-size: 13px;
+        }
+
+        th {
+            background-color: var(--header-bg);
+            color: var(--text-muted);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 10px 8px;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s, color 0.2s;
+            white-space: nowrap;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        th:hover {
+            background-color: var(--hover-bg);
+            color: #ffffff;
+        }
+
+        th.sort-active {
+            color: var(--accent-color);
+        }
+
+        th .sort-icon {
+            display: inline-block;
+            margin-left: 2px;
+            font-size: 10px;
+            opacity: 0.5;
+        }
+
+        th.sort-active .sort-icon {
+            opacity: 1;
+        }
+
+        td {
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--border-color);
+            white-space: nowrap;
+            background-color: var(--card-bg);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: var(--hover-bg);
+        }
+
+        th:first-child,
+        td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 2;
+            border-right: 1px solid var(--border-color);
+        }
+
+        th:first-child {
+            background-color: var(--header-bg);
+            z-index: 3;
+        }
+
+        tr:hover td:first-child {
+            background-color: var(--hover-bg);
+        }
+
+        .project-name {
+            font-weight: 600;
+            color: #ffffff;
+            padding-left: 12px;
+        }
+
+        .person-cell {
+            color: #bf94ff;
+            font-weight: 500;
+        }
+
+        .date-cell {
+            color: var(--text-muted);
+        }
+
+        .num-cell {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            padding-right: 12px;
+        }
+
+        .th-right {
+            text-align: right;
+            padding-right: 12px;
+        }
+
+        footer {
+            margin-top: 24px;
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 12px 6px; }
+            h1 { font-size: 20px; }
+            th, td { padding: 8px 6px; font-size: 12px; }
+            .project-name { padding-left: 8px; max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+            .num-cell, .th-right { padding-right: 8px; }
+            .section-header { flex-direction: column; align-items: flex-start; }
+            .filter-group { flex-direction: column; align-items: flex-start; gap: 8px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-box">
+        <h1>Knirpz <span>Streams</span></h1>
+    </div>
+
+    <div class="section-header">
+        <div class="section-title">Projekt-Auswertung</div>
+        <div class="filter-group">
+            <label>
+                <input type="checkbox" id="filterSingle" checked onchange="filterProjects()">
+                nur Single-Stream-Projekte
+            </label>
+            <label>
+                <input type="checkbox" id="filterMedium" checked onchange="filterProjects()">
+                nur kleinere Projekte (2 bis 6 Streams)
+            </label>
+            <label>
+                <input type="checkbox" id="filterLarge" checked onchange="filterProjects()">
+                nur Großprojekte (ab 7 Streams)
+            </label>
+        </div>
+    </div>
+
+    <div class="card">
+        <table id="projectsTable">
+            <thead>
+                <tr>
+                    <th style="padding-left: 12px;" onclick="sortTable('projectsTable', 0, 'string')">Projekt <span class="sort-icon">⇅</span></th>
+                    <th onclick="sortTable('projectsTable', 1, 'string')">Mitstreamer <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('projectsTable', 2, 'number')">Streams <span class="sort-icon">⇅</span></th>
+                    <th onclick="sortTable('projectsTable', 3, 'date')">Datum <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('projectsTable', 4, 'number')">Total Duration <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('projectsTable', 5, 'number')">Avg Duration <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('projectsTable', 6, 'number')">Avg Viewers <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('projectsTable', 7, 'number')">Avg Max Viewers <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('projectsTable', 8, 'number')">Total Followers <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('projectsTable', 9, 'number')">Avg Followers <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('projectsTable', 10, 'number')">Follows / Std. <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('projectsTable', 11, 'number')">Score <span class="sort-icon">⇅</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr data-streams="1">
+            <td class="project-name">Winter Übernachtung</td>
+            <td class="person-cell">-</td>
+            <td class="num-cell" data-value="1">1</td>
+            <td class="date-cell" data-value="1767913200000">09.01.2026</td>
+            <td class="num-cell" data-value="20.5">20,5 Std.</td>
+            <td class="num-cell" data-value="20.5">20,5 Std.</td>
+            <td class="num-cell" data-value="1646">1.646</td>
+            <td class="num-cell" data-value="3067">3.067</td>
+            <td class="num-cell" data-value="231">231</td>
+            <td class="num-cell" data-value="231">231</td>
+            <td class="num-cell" data-value="11.27">11,27</td>
+            <td class="num-cell" data-value="93"><strong>93</strong></td>
+        </tr><tr data-streams="7">
+            <td class="project-name">Deutschlandtour #4/West</td>
+            <td class="person-cell">-</td>
+            <td class="num-cell" data-value="7">7</td>
+            <td class="date-cell" data-value="1783116000000">28.06. – 04.07.2026</td>
+            <td class="num-cell" data-value="81.5">81,5 Std.</td>
+            <td class="num-cell" data-value="11.6">11,6 Std.</td>
+            <td class="num-cell" data-value="1914">1.914</td>
+            <td class="num-cell" data-value="3021">3.021</td>
+            <td class="num-cell" data-value="669">669</td>
+            <td class="num-cell" data-value="96">96</td>
+            <td class="num-cell" data-value="8.21">8,21</td>
+            <td class="num-cell" data-value="79"><strong>79</strong></td>
+        </tr><tr data-streams="4">
+            <td class="project-name">Bootstrampen mit</td>
+            <td class="person-cell">Sandro</td>
+            <td class="num-cell" data-value="4">4</td>
+            <td class="date-cell" data-value="1783720800000">08.07. – 11.07.2026</td>
+            <td class="num-cell" data-value="40.2">40,2 Std.</td>
+            <td class="num-cell" data-value="10.1">10,1 Std.</td>
+            <td class="num-cell" data-value="1782">1.782</td>
+            <td class="num-cell" data-value="2987">2.987</td>
+            <td class="num-cell" data-value="316">316</td>
+            <td class="num-cell" data-value="79">79</td>
+            <td class="num-cell" data-value="7.86">7,86</td>
+            <td class="num-cell" data-value="70"><strong>70</strong></td>
+        </tr><tr data-streams="1">
+            <td class="project-name">Ultimate Run</td>
+            <td class="person-cell">Ronny</td>
+            <td class="num-cell" data-value="1">1</td>
+            <td class="date-cell" data-value="1776981600000">24.04.2026</td>
+            <td class="num-cell" data-value="27.0">27,0 Std.</td>
+            <td class="num-cell" data-value="27.0">27,0 Std.</td>
+            <td class="num-cell" data-value="1240">1.240</td>
+            <td class="num-cell" data-value="1826">1.826</td>
+            <td class="num-cell" data-value="306">306</td>
+            <td class="num-cell" data-value="306">306</td>
+            <td class="num-cell" data-value="11.33">11,33</td>
+            <td class="num-cell" data-value="70"><strong>70</strong></td>
+        </tr><tr data-streams="9">
+            <td class="project-name">Tridem Tour #2 mit</td>
+            <td class="person-cell">Ronny, Dean</td>
+            <td class="num-cell" data-value="9">9</td>
+            <td class="date-cell" data-value="1780005600000">16.05. – 29.05.2026</td>
+            <td class="num-cell" data-value="243.4">243,4 Std.</td>
+            <td class="num-cell" data-value="27.0">27,0 Std.</td>
+            <td class="num-cell" data-value="1455">1.455</td>
+            <td class="num-cell" data-value="2956">2.956</td>
+            <td class="num-cell" data-value="2229">2.229</td>
+            <td class="num-cell" data-value="248">248</td>
+            <td class="num-cell" data-value="9.16">9,16</td>
+            <td class="num-cell" data-value="67"><strong>67</strong></td>
+        </tr><tr data-streams="2">
+            <td class="project-name">Tierheim mit</td>
+            <td class="person-cell">Gül, Organisation</td>
+            <td class="num-cell" data-value="2">2</td>
+            <td class="date-cell" data-value="1781388000000">11.05. – 14.06.2026</td>
+            <td class="num-cell" data-value="8.0">8,0 Std.</td>
+            <td class="num-cell" data-value="4.0">4,0 Std.</td>
+            <td class="num-cell" data-value="1317">1.317</td>
+            <td class="num-cell" data-value="1555">1.555</td>
+            <td class="num-cell" data-value="66">66</td>
+            <td class="num-cell" data-value="33">33</td>
+            <td class="num-cell" data-value="8.25">8,25</td>
+            <td class="num-cell" data-value="54"><strong>54</strong></td>
+        </tr><tr data-streams="1">
+            <td class="project-name">Manhunt Selbstversuch (kp?)</td>
+            <td class="person-cell">-</td>
+            <td class="num-cell" data-value="1">1</td>
+            <td class="date-cell" data-value="1768690800000">18.01.2026</td>
+            <td class="num-cell" data-value="5.3">5,3 Std.</td>
+            <td class="num-cell" data-value="5.3">5,3 Std.</td>
+            <td class="num-cell" data-value="1181">1.181</td>
+            <td class="num-cell" data-value="1795">1.795</td>
+            <td class="num-cell" data-value="47">47</td>
+            <td class="num-cell" data-value="47">47</td>
+            <td class="num-cell" data-value="8.87">8,87</td>
+            <td class="num-cell" data-value="52"><strong>52</strong></td>
+        </tr><tr data-streams="1">
+            <td class="project-name">Pino abholen</td>
+            <td class="person-cell">-</td>
+            <td class="num-cell" data-value="1">1</td>
+            <td class="date-cell" data-value="1773183600000">11.03.2026</td>
+            <td class="num-cell" data-value="4.7">4,7 Std.</td>
+            <td class="num-cell" data-value="4.7">4,7 Std.</td>
+            <td class="num-cell" data-value="1633">1.633</td>
+            <td class="num-cell" data-value="2048">2.048</td>
+            <td class="num-cell" data-value="28">28</td>
+            <td class="num-cell" data-value="28">28</td>
+            <td class="num-cell" data-value="5.96">5,96</td>
+            <td class="num-cell" data-value="49"><strong>49</strong></td>
+        </tr><tr data-streams="26">
+            <td class="project-name">Berlin, etc IRL</td>
+            <td class="person-cell">Ronny, Gül</td>
+            <td class="num-cell" data-value="26">26</td>
+            <td class="date-cell" data-value="1786572000000">03.01. – 13.08.2026</td>
+            <td class="num-cell" data-value="106.8">106,8 Std.</td>
+            <td class="num-cell" data-value="4.1">4,1 Std.</td>
+            <td class="num-cell" data-value="1112">1.112</td>
+            <td class="num-cell" data-value="1317">1.317</td>
+            <td class="num-cell" data-value="842">842</td>
+            <td class="num-cell" data-value="32">32</td>
+            <td class="num-cell" data-value="7.88">7,88</td>
+            <td class="num-cell" data-value="44"><strong>44</strong></td>
+        </tr><tr data-streams="1">
+            <td class="project-name">Chase-Bewerbung</td>
+            <td class="person-cell">-</td>
+            <td class="num-cell" data-value="1">1</td>
+            <td class="date-cell" data-value="1775944800000">12.04.2026</td>
+            <td class="num-cell" data-value="25.2">25,2 Std.</td>
+            <td class="num-cell" data-value="25.2">25,2 Std.</td>
+            <td class="num-cell" data-value="1142">1.142</td>
+            <td class="num-cell" data-value="1987">1.987</td>
+            <td class="num-cell" data-value="184">184</td>
+            <td class="num-cell" data-value="184">184</td>
+            <td class="num-cell" data-value="7.30">7,30</td>
+            <td class="num-cell" data-value="42"><strong>42</strong></td>
+        </tr><tr data-streams="1">
+            <td class="project-name">175KM Mauerweg</td>
+            <td class="person-cell">-</td>
+            <td class="num-cell" data-value="1">1</td>
+            <td class="date-cell" data-value="1785016800000">26.07.2026</td>
+            <td class="num-cell" data-value="10.0">10,0 Std.</td>
+            <td class="num-cell" data-value="10.0">10,0 Std.</td>
+            <td class="num-cell" data-value="1232">1.232</td>
+            <td class="num-cell" data-value="2721">2.721</td>
+            <td class="num-cell" data-value="67">67</td>
+            <td class="num-cell" data-value="67">67</td>
+            <td class="num-cell" data-value="6.70">6,70</td>
+            <td class="num-cell" data-value="41"><strong>41</strong></td>
+        </tr><tr data-streams="13">
+            <td class="project-name">Skandi-Tour mit</td>
+            <td class="person-cell">Gül</td>
+            <td class="num-cell" data-value="13">13</td>
+            <td class="date-cell" data-value="1788472800000">17.08. – 04.09.2026</td>
+            <td class="num-cell" data-value="98.7">98,7 Std.</td>
+            <td class="num-cell" data-value="7.6">7,6 Std.</td>
+            <td class="num-cell" data-value="1140">1.140</td>
+            <td class="num-cell" data-value="1846">1.846</td>
+            <td class="num-cell" data-value="691">691</td>
+            <td class="num-cell" data-value="53">53</td>
+            <td class="num-cell" data-value="7.00">7,00</td>
+            <td class="num-cell" data-value="40"><strong>40</strong></td>
+        </tr><tr data-streams="2">
+            <td class="project-name">Sizilien mit</td>
+            <td class="person-cell">Gül, Organisation</td>
+            <td class="num-cell" data-value="2">2</td>
+            <td class="date-cell" data-value="1785621600000">01.08. – 02.08.2026</td>
+            <td class="num-cell" data-value="11.7">11,7 Std.</td>
+            <td class="num-cell" data-value="5.8">5,8 Std.</td>
+            <td class="num-cell" data-value="1102">1.102</td>
+            <td class="num-cell" data-value="2133">2.133</td>
+            <td class="num-cell" data-value="82">82</td>
+            <td class="num-cell" data-value="41">41</td>
+            <td class="num-cell" data-value="7.01">7,01</td>
+            <td class="num-cell" data-value="39"><strong>39</strong></td>
+        </tr><tr data-streams="3">
+            <td class="project-name">3 Tage mit</td>
+            <td class="person-cell">Ronny, Adrian, HandofBlood</td>
+            <td class="num-cell" data-value="3">3</td>
+            <td class="date-cell" data-value="1776549600000">17.04. – 19.04.2026</td>
+            <td class="num-cell" data-value="19.4">19,4 Std.</td>
+            <td class="num-cell" data-value="6.5">6,5 Std.</td>
+            <td class="num-cell" data-value="550">550</td>
+            <td class="num-cell" data-value="883">883</td>
+            <td class="num-cell" data-value="252">252</td>
+            <td class="num-cell" data-value="84">84</td>
+            <td class="num-cell" data-value="12.99">12,99</td>
+            <td class="num-cell" data-value="36"><strong>36</strong></td>
+        </tr><tr data-streams="1">
+            <td class="project-name">Müll Sammeln</td>
+            <td class="person-cell">-</td>
+            <td class="num-cell" data-value="1">1</td>
+            <td class="date-cell" data-value="1767308400000">02.01.2026</td>
+            <td class="num-cell" data-value="4.9">4,9 Std.</td>
+            <td class="num-cell" data-value="4.9">4,9 Std.</td>
+            <td class="num-cell" data-value="921">921</td>
+            <td class="num-cell" data-value="1104">1.104</td>
+            <td class="num-cell" data-value="37">37</td>
+            <td class="num-cell" data-value="37">37</td>
+            <td class="num-cell" data-value="7.55">7,55</td>
+            <td class="num-cell" data-value="35"><strong>35</strong></td>
+        </tr><tr data-streams="2">
+            <td class="project-name">Mit/Bei HandofBlood</td>
+            <td class="person-cell">HandofBlood</td>
+            <td class="num-cell" data-value="2">2</td>
+            <td class="date-cell" data-value="1784757600000">30.04. – 23.07.2026</td>
+            <td class="num-cell" data-value="9.5">9,5 Std.</td>
+            <td class="num-cell" data-value="4.8">4,8 Std.</td>
+            <td class="num-cell" data-value="699">699</td>
+            <td class="num-cell" data-value="952">952</td>
+            <td class="num-cell" data-value="91">91</td>
+            <td class="num-cell" data-value="46">46</td>
+            <td class="num-cell" data-value="9.58">9,58</td>
+            <td class="num-cell" data-value="33"><strong>33</strong></td>
+        </tr><tr data-streams="4">
+            <td class="project-name">Norwegen / Greenpeace mit</td>
+            <td class="person-cell">Gül, Organisation</td>
+            <td class="num-cell" data-value="4">4</td>
+            <td class="date-cell" data-value="1780696800000">02.06. – 06.06.2026</td>
+            <td class="num-cell" data-value="18.1">18,1 Std.</td>
+            <td class="num-cell" data-value="4.5">4,5 Std.</td>
+            <td class="num-cell" data-value="1078">1.078</td>
+            <td class="num-cell" data-value="1388">1.388</td>
+            <td class="num-cell" data-value="106">106</td>
+            <td class="num-cell" data-value="27">27</td>
+            <td class="num-cell" data-value="5.86">5,86</td>
+            <td class="num-cell" data-value="32"><strong>32</strong></td>
+        </tr><tr data-streams="1">
+            <td class="project-name">Tigerenten Club</td>
+            <td class="person-cell">Jonsman, Junicats</td>
+            <td class="num-cell" data-value="1">1</td>
+            <td class="date-cell" data-value="1784325600000">18.07.2026</td>
+            <td class="num-cell" data-value="4.3">4,3 Std.</td>
+            <td class="num-cell" data-value="4.3">4,3 Std.</td>
+            <td class="num-cell" data-value="1110">1.110</td>
+            <td class="num-cell" data-value="1317">1.317</td>
+            <td class="num-cell" data-value="24">24</td>
+            <td class="num-cell" data-value="24">24</td>
+            <td class="num-cell" data-value="5.58">5,58</td>
+            <td class="num-cell" data-value="31"><strong>31</strong></td>
+        </tr><tr data-streams="1">
+            <td class="project-name">Hybrid</td>
+            <td class="person-cell">-</td>
+            <td class="num-cell" data-value="1">1</td>
+            <td class="date-cell" data-value="1767826800000">08.01.2026</td>
+            <td class="num-cell" data-value="3.9">3,9 Std.</td>
+            <td class="num-cell" data-value="3.9">3,9 Std.</td>
+            <td class="num-cell" data-value="1152">1.152</td>
+            <td class="num-cell" data-value="1369">1.369</td>
+            <td class="num-cell" data-value="21">21</td>
+            <td class="num-cell" data-value="21">21</td>
+            <td class="num-cell" data-value="5.38">5,38</td>
+            <td class="num-cell" data-value="31"><strong>31</strong></td>
+        </tr><tr data-streams="8">
+            <td class="project-name">Pino-Tour in Italien mit</td>
+            <td class="person-cell">Gül</td>
+            <td class="num-cell" data-value="8">8</td>
+            <td class="date-cell" data-value="1775340000000">27.03. – 05.04.2026</td>
+            <td class="num-cell" data-value="68.0">68,0 Std.</td>
+            <td class="num-cell" data-value="8.5">8,5 Std.</td>
+            <td class="num-cell" data-value="1240">1.240</td>
+            <td class="num-cell" data-value="1973">1.973</td>
+            <td class="num-cell" data-value="327">327</td>
+            <td class="num-cell" data-value="41">41</td>
+            <td class="num-cell" data-value="4.81">4,81</td>
+            <td class="num-cell" data-value="30"><strong>30</strong></td>
+        </tr><tr data-streams="10">
+            <td class="project-name">Grillung</td>
+            <td class="person-cell">Sponsor, Junicats</td>
+            <td class="num-cell" data-value="10">10</td>
+            <td class="date-cell" data-value="1785189600000">06.03. – 28.07.2026</td>
+            <td class="num-cell" data-value="35.6">35,6 Std.</td>
+            <td class="num-cell" data-value="3.6">3,6 Std.</td>
+            <td class="num-cell" data-value="900">900</td>
+            <td class="num-cell" data-value="1182">1.182</td>
+            <td class="num-cell" data-value="188">188</td>
+            <td class="num-cell" data-value="19">19</td>
+            <td class="num-cell" data-value="5.28">5,28</td>
+            <td class="num-cell" data-value="24"><strong>24</strong></td>
+        </tr><tr data-streams="1">
+            <td class="project-name">Per Anhalter</td>
+            <td class="person-cell">-</td>
+            <td class="num-cell" data-value="1">1</td>
+            <td class="date-cell" data-value="1772146800000">27.02.2026</td>
+            <td class="num-cell" data-value="6.8">6,8 Std.</td>
+            <td class="num-cell" data-value="6.8">6,8 Std.</td>
+            <td class="num-cell" data-value="1239">1.239</td>
+            <td class="num-cell" data-value="1616">1.616</td>
+            <td class="num-cell" data-value="26">26</td>
+            <td class="num-cell" data-value="26">26</td>
+            <td class="num-cell" data-value="3.82">3,82</td>
+            <td class="num-cell" data-value="24"><strong>24</strong></td>
+        </tr><tr data-streams="1">
+            <td class="project-name">Wer kann länger Rolltreppe</td>
+            <td class="person-cell">Ronny</td>
+            <td class="num-cell" data-value="1">1</td>
+            <td class="date-cell" data-value="1773702000000">17.03.2026</td>
+            <td class="num-cell" data-value="4.2">4,2 Std.</td>
+            <td class="num-cell" data-value="4.2">4,2 Std.</td>
+            <td class="num-cell" data-value="855">855</td>
+            <td class="num-cell" data-value="1176">1.176</td>
+            <td class="num-cell" data-value="22">22</td>
+            <td class="num-cell" data-value="22">22</td>
+            <td class="num-cell" data-value="5.24">5,24</td>
+            <td class="num-cell" data-value="22"><strong>22</strong></td>
+        </tr><tr data-streams="1">
+            <td class="project-name">Johanniter Obdachlosenhilfe</td>
+            <td class="person-cell">Organisation</td>
+            <td class="num-cell" data-value="1">1</td>
+            <td class="date-cell" data-value="1773270000000">12.03.2026</td>
+            <td class="num-cell" data-value="3.2">3,2 Std.</td>
+            <td class="num-cell" data-value="3.2">3,2 Std.</td>
+            <td class="num-cell" data-value="855">855</td>
+            <td class="num-cell" data-value="1263">1.263</td>
+            <td class="num-cell" data-value="14">14</td>
+            <td class="num-cell" data-value="14">14</td>
+            <td class="num-cell" data-value="4.38">4,38</td>
+            <td class="num-cell" data-value="19"><strong>19</strong></td>
+        </tr><tr data-streams="6">
+            <td class="project-name">Skateboard &amp; Kickflip</td>
+            <td class="person-cell">-</td>
+            <td class="num-cell" data-value="6">6</td>
+            <td class="date-cell" data-value="1782252000000">10.06. – 24.06.2026</td>
+            <td class="num-cell" data-value="25.6">25,6 Std.</td>
+            <td class="num-cell" data-value="4.3">4,3 Std.</td>
+            <td class="num-cell" data-value="995">995</td>
+            <td class="num-cell" data-value="1172">1.172</td>
+            <td class="num-cell" data-value="94">94</td>
+            <td class="num-cell" data-value="16">16</td>
+            <td class="num-cell" data-value="3.67">3,67</td>
+            <td class="num-cell" data-value="18"><strong>18</strong></td>
+        </tr><tr data-streams="2">
+            <td class="project-name">Para-Eishockey</td>
+            <td class="person-cell">Sponsor</td>
+            <td class="num-cell" data-value="2">2</td>
+            <td class="date-cell" data-value="1773097200000">03.03. – 10.03.2026</td>
+            <td class="num-cell" data-value="10.0">10,0 Std.</td>
+            <td class="num-cell" data-value="5.0">5,0 Std.</td>
+            <td class="num-cell" data-value="1204">1.204</td>
+            <td class="num-cell" data-value="1647">1.647</td>
+            <td class="num-cell" data-value="28">28</td>
+            <td class="num-cell" data-value="14">14</td>
+            <td class="num-cell" data-value="2.80">2,80</td>
+            <td class="num-cell" data-value="17"><strong>17</strong></td>
+        </tr><tr data-streams="6">
+            <td class="project-name">Mallorca Fahrradtour</td>
+            <td class="person-cell">-</td>
+            <td class="num-cell" data-value="6">6</td>
+            <td class="date-cell" data-value="1771801200000">18.02. – 23.02.2026</td>
+            <td class="num-cell" data-value="52.8">52,8 Std.</td>
+            <td class="num-cell" data-value="8.8">8,8 Std.</td>
+            <td class="num-cell" data-value="999">999</td>
+            <td class="num-cell" data-value="1508">1.508</td>
+            <td class="num-cell" data-value="179">179</td>
+            <td class="num-cell" data-value="30">30</td>
+            <td class="num-cell" data-value="3.39">3,39</td>
+            <td class="num-cell" data-value="17"><strong>17</strong></td>
+        </tr><tr data-streams="1">
+            <td class="project-name">Pino mit Gül testen</td>
+            <td class="person-cell">Gül</td>
+            <td class="num-cell" data-value="1">1</td>
+            <td class="date-cell" data-value="1773356400000">13.03.2026</td>
+            <td class="num-cell" data-value="3.0">3,0 Std.</td>
+            <td class="num-cell" data-value="3.0">3,0 Std.</td>
+            <td class="num-cell" data-value="1214">1.214</td>
+            <td class="num-cell" data-value="1452">1.452</td>
+            <td class="num-cell" data-value="8">8</td>
+            <td class="num-cell" data-value="8">8</td>
+            <td class="num-cell" data-value="2.67">2,67</td>
+            <td class="num-cell" data-value="16"><strong>16</strong></td>
+        </tr><tr data-streams="13">
+            <td class="project-name">Aus der Butze</td>
+            <td class="person-cell">Ronny, Gül</td>
+            <td class="num-cell" data-value="13">13</td>
+            <td class="date-cell" data-value="1786658400000">04.01. – 14.08.2026</td>
+            <td class="num-cell" data-value="58.0">58,0 Std.</td>
+            <td class="num-cell" data-value="4.5">4,5 Std.</td>
+            <td class="num-cell" data-value="734">734</td>
+            <td class="num-cell" data-value="932">932</td>
+            <td class="num-cell" data-value="217">217</td>
+            <td class="num-cell" data-value="17">17</td>
+            <td class="num-cell" data-value="3.74">3,74</td>
+            <td class="num-cell" data-value="14"><strong>14</strong></td>
+        </tr><tr data-streams="2">
+            <td class="project-name">Handwerken</td>
+            <td class="person-cell">-</td>
+            <td class="num-cell" data-value="2">2</td>
+            <td class="date-cell" data-value="1770159600000">25.01. – 04.02.2026</td>
+            <td class="num-cell" data-value="7.8">7,8 Std.</td>
+            <td class="num-cell" data-value="3.9">3,9 Std.</td>
+            <td class="num-cell" data-value="781">781</td>
+            <td class="num-cell" data-value="1064">1.064</td>
+            <td class="num-cell" data-value="17">17</td>
+            <td class="num-cell" data-value="9">9</td>
+            <td class="num-cell" data-value="2.18">2,18</td>
+            <td class="num-cell" data-value="9"><strong>9</strong></td>
+        </tr><tr data-streams="3">
+            <td class="project-name">Geocaching</td>
+            <td class="person-cell">Organisation</td>
+            <td class="num-cell" data-value="3">3</td>
+            <td class="date-cell" data-value="1784930400000">22.01. – 25.07.2026</td>
+            <td class="num-cell" data-value="17.3">17,3 Std.</td>
+            <td class="num-cell" data-value="5.8">5,8 Std.</td>
+            <td class="num-cell" data-value="694">694</td>
+            <td class="num-cell" data-value="1057">1.057</td>
+            <td class="num-cell" data-value="35">35</td>
+            <td class="num-cell" data-value="12">12</td>
+            <td class="num-cell" data-value="2.02">2,02</td>
+            <td class="num-cell" data-value="7"><strong>7</strong></td>
+        </tr><tr data-streams="1">
+            <td class="project-name">Bei der EU-Kommission</td>
+            <td class="person-cell">Organisation</td>
+            <td class="num-cell" data-value="1">1</td>
+            <td class="date-cell" data-value="1776290400000">16.04.2026</td>
+            <td class="num-cell" data-value="2.5">2,5 Std.</td>
+            <td class="num-cell" data-value="2.5">2,5 Std.</td>
+            <td class="num-cell" data-value="364">364</td>
+            <td class="num-cell" data-value="509">509</td>
+            <td class="num-cell" data-value="-5">-5</td>
+            <td class="num-cell" data-value="-5">-5</td>
+            <td class="num-cell" data-value="-2.00">-2,00</td>
+            <td class="num-cell" data-value="-4"><strong>-4</strong></td>
+        </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section-title" style="margin: 24px 0 12px 0;">Monatliche Auswertung</div>
+    <div class="card">
+        <table id="monthsTable">
+            <thead>
+                <tr>
+                    <th style="padding-left: 12px;" onclick="sortTable('monthsTable', 0, 'string')">Monat <span class="sort-icon">⇅</span></th>
+                    <th onclick="sortTable('monthsTable', 1, 'string')">Jahr <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('monthsTable', 2, 'number')">Streams <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('monthsTable', 3, 'number')">Total Duration <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('monthsTable', 4, 'number')">Avg Duration <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('monthsTable', 5, 'number')">Avg Viewers <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('monthsTable', 6, 'number')">Avg Max Viewers <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('monthsTable', 7, 'number')">Total Followers <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('monthsTable', 8, 'number')">Avg Followers <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('monthsTable', 9, 'number')">Follows / Std. <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('monthsTable', 10, 'number')">Score <span class="sort-icon">⇅</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+            <td class="project-name">Mai</td>
+            <td class="person-cell" data-value="2026">2026</td>
+            <td class="num-cell" data-value="14">14</td>
+            <td class="num-cell" data-value="254.8">254,8 Std.</td>
+            <td class="num-cell" data-value="18.2">18,2 Std.</td>
+            <td class="num-cell" data-value="1428">1.428</td>
+            <td class="num-cell" data-value="2258">2.258</td>
+            <td class="num-cell" data-value="2328">2.328</td>
+            <td class="num-cell" data-value="166">166</td>
+            <td class="num-cell" data-value="9.14">9,14</td>
+            <td class="num-cell" data-value="65"><strong>65</strong></td>
+        </tr><tr>
+            <td class="project-name">August</td>
+            <td class="person-cell" data-value="2026">2026</td>
+            <td class="num-cell" data-value="18">18</td>
+            <td class="num-cell" data-value="127.5">127,5 Std.</td>
+            <td class="num-cell" data-value="7.1">7,1 Std.</td>
+            <td class="num-cell" data-value="1294">1.294</td>
+            <td class="num-cell" data-value="1959">1.959</td>
+            <td class="num-cell" data-value="1150">1.150</td>
+            <td class="num-cell" data-value="64">64</td>
+            <td class="num-cell" data-value="9.02">9,02</td>
+            <td class="num-cell" data-value="58"><strong>58</strong></td>
+        </tr><tr>
+            <td class="project-name">Juli</td>
+            <td class="person-cell" data-value="2026">2026</td>
+            <td class="num-cell" data-value="16">16</td>
+            <td class="num-cell" data-value="127.2">127,2 Std.</td>
+            <td class="num-cell" data-value="7.9">7,9 Std.</td>
+            <td class="num-cell" data-value="1520">1.520</td>
+            <td class="num-cell" data-value="2097">2.097</td>
+            <td class="num-cell" data-value="849">849</td>
+            <td class="num-cell" data-value="53">53</td>
+            <td class="num-cell" data-value="6.67">6,67</td>
+            <td class="num-cell" data-value="51"><strong>51</strong></td>
+        </tr><tr style="font-weight: bold;">
+            <td class="project-name" style="color: var(--accent-color);">Jeder Monat</td>
+            <td class="person-cell" style="color: var(--accent-color);" data-value="9999">Jedes Jahr</td>
+            <td class="num-cell" data-value="136">136</td>
+            <td class="num-cell" data-value="1037.9">1037,9 Std.</td>
+            <td class="num-cell" data-value="7.6">7,6 Std.</td>
+            <td class="num-cell" data-value="1249">1.249</td>
+            <td class="num-cell" data-value="1640">1.640</td>
+            <td class="num-cell" data-value="7439">7.439</td>
+            <td class="num-cell" data-value="55">55</td>
+            <td class="num-cell" data-value="7.17">7,17</td>
+            <td class="num-cell" data-value="45"><strong>45</strong></td>
+        </tr><tr>
+            <td class="project-name">Januar</td>
+            <td class="person-cell" data-value="2026">2026</td>
+            <td class="num-cell" data-value="14">14</td>
+            <td class="num-cell" data-value="85.0">85,0 Std.</td>
+            <td class="num-cell" data-value="6.1">6,1 Std.</td>
+            <td class="num-cell" data-value="1122">1.122</td>
+            <td class="num-cell" data-value="1496">1.496</td>
+            <td class="num-cell" data-value="635">635</td>
+            <td class="num-cell" data-value="45">45</td>
+            <td class="num-cell" data-value="7.47">7,47</td>
+            <td class="num-cell" data-value="42"><strong>42</strong></td>
+        </tr><tr>
+            <td class="project-name">Juni</td>
+            <td class="person-cell" data-value="2026">2026</td>
+            <td class="num-cell" data-value="20">20</td>
+            <td class="num-cell" data-value="108.8">108,8 Std.</td>
+            <td class="num-cell" data-value="5.4">5,4 Std.</td>
+            <td class="num-cell" data-value="1335">1.335</td>
+            <td class="num-cell" data-value="1539">1.539</td>
+            <td class="num-cell" data-value="659">659</td>
+            <td class="num-cell" data-value="33">33</td>
+            <td class="num-cell" data-value="6.06">6,06</td>
+            <td class="num-cell" data-value="40"><strong>40</strong></td>
+        </tr><tr>
+            <td class="project-name">April</td>
+            <td class="person-cell" data-value="2026">2026</td>
+            <td class="num-cell" data-value="18">18</td>
+            <td class="num-cell" data-value="134.7">134,7 Std.</td>
+            <td class="num-cell" data-value="7.5">7,5 Std.</td>
+            <td class="num-cell" data-value="955">955</td>
+            <td class="num-cell" data-value="1199">1.199</td>
+            <td class="num-cell" data-value="1021">1.021</td>
+            <td class="num-cell" data-value="57">57</td>
+            <td class="num-cell" data-value="7.58">7,58</td>
+            <td class="num-cell" data-value="36"><strong>36</strong></td>
+        </tr><tr>
+            <td class="project-name">März</td>
+            <td class="person-cell" data-value="2026">2026</td>
+            <td class="num-cell" data-value="18">18</td>
+            <td class="num-cell" data-value="91.4">91,4 Std.</td>
+            <td class="num-cell" data-value="5.1">5,1 Std.</td>
+            <td class="num-cell" data-value="1171">1.171</td>
+            <td class="num-cell" data-value="1559">1.559</td>
+            <td class="num-cell" data-value="461">461</td>
+            <td class="num-cell" data-value="26">26</td>
+            <td class="num-cell" data-value="5.04">5,04</td>
+            <td class="num-cell" data-value="30"><strong>30</strong></td>
+        </tr><tr>
+            <td class="project-name">Februar</td>
+            <td class="person-cell" data-value="2026">2026</td>
+            <td class="num-cell" data-value="15">15</td>
+            <td class="num-cell" data-value="87.5">87,5 Std.</td>
+            <td class="num-cell" data-value="5.8">5,8 Std.</td>
+            <td class="num-cell" data-value="940">940</td>
+            <td class="num-cell" data-value="1247">1.247</td>
+            <td class="num-cell" data-value="282">282</td>
+            <td class="num-cell" data-value="19">19</td>
+            <td class="num-cell" data-value="3.22">3,22</td>
+            <td class="num-cell" data-value="15"><strong>15</strong></td>
+        </tr><tr>
+            <td class="project-name">September</td>
+            <td class="person-cell" data-value="2026">2026</td>
+            <td class="num-cell" data-value="3">3</td>
+            <td class="num-cell" data-value="21.0">21,0 Std.</td>
+            <td class="num-cell" data-value="7.0">7,0 Std.</td>
+            <td class="num-cell" data-value="711">711</td>
+            <td class="num-cell" data-value="853">853</td>
+            <td class="num-cell" data-value="54">54</td>
+            <td class="num-cell" data-value="18">18</td>
+            <td class="num-cell" data-value="2.57">2,57</td>
+            <td class="num-cell" data-value="9"><strong>9</strong></td>
+        </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section-title" style="margin: 24px 0 12px 0;">Gesamt- & Mitstreamer-Vergleich (Solo vs. Collab)</div>
+    <div class="card">
+        <table id="summaryTable">
+            <thead>
+                <tr>
+                    <th style="padding-left: 12px;" onclick="sortTable('summaryTable', 0, 'string')">Kategorie / Filter <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('summaryTable', 1, 'number')">Streams <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('summaryTable', 2, 'number')">Total Duration <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('summaryTable', 3, 'number')">Avg Duration <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('summaryTable', 4, 'number')">Avg Viewers <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('summaryTable', 5, 'number')">Avg Max Viewers <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('summaryTable', 6, 'number')">Total Followers <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('summaryTable', 7, 'number')">Avg Followers <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('summaryTable', 8, 'number')">Follows / Std. <span class="sort-icon">⇅</span></th>
+                    <th class="th-right" onclick="sortTable('summaryTable', 9, 'number')">Score <span class="sort-icon">⇅</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+            <td class="project-name">Mit Sandro</td>
+            <td class="num-cell" data-value="4">4</td>
+            <td class="num-cell" data-value="40.2">40,2 Std.</td>
+            <td class="num-cell" data-value="10.1">10,1 Std.</td>
+            <td class="num-cell" data-value="1782">1.782</td>
+            <td class="num-cell" data-value="2987">2.987</td>
+            <td class="num-cell" data-value="316">316</td>
+            <td class="num-cell" data-value="79">79</td>
+            <td class="num-cell" data-value="7.86">7,86</td>
+            <td class="num-cell" data-value="70"><strong>70</strong></td>
+        </tr><tr>
+            <td class="project-name">Mit Dean</td>
+            <td class="num-cell" data-value="9">9</td>
+            <td class="num-cell" data-value="243.4">243,4 Std.</td>
+            <td class="num-cell" data-value="27.0">27,0 Std.</td>
+            <td class="num-cell" data-value="1455">1.455</td>
+            <td class="num-cell" data-value="2956">2.956</td>
+            <td class="num-cell" data-value="2229">2.229</td>
+            <td class="num-cell" data-value="248">248</td>
+            <td class="num-cell" data-value="9.16">9,16</td>
+            <td class="num-cell" data-value="67"><strong>67</strong></td>
+        </tr><tr>
+            <td class="project-name">Mit Ronny</td>
+            <td class="num-cell" data-value="17">17</td>
+            <td class="num-cell" data-value="312.8">312,8 Std.</td>
+            <td class="num-cell" data-value="18.4">18,4 Std.</td>
+            <td class="num-cell" data-value="1372">1.372</td>
+            <td class="num-cell" data-value="2177">2.177</td>
+            <td class="num-cell" data-value="3015">3.015</td>
+            <td class="num-cell" data-value="177">177</td>
+            <td class="num-cell" data-value="9.64">9,64</td>
+            <td class="num-cell" data-value="66"><strong>66</strong></td>
+        </tr><tr>
+            <td class="project-name">Mit Mitstreamer(n)</td>
+            <td class="num-cell" data-value="70">70</td>
+            <td class="num-cell" data-value="635.5">635,5 Std.</td>
+            <td class="num-cell" data-value="9.1">9,1 Std.</td>
+            <td class="num-cell" data-value="1279">1.279</td>
+            <td class="num-cell" data-value="1794">1.794</td>
+            <td class="num-cell" data-value="4984">4.984</td>
+            <td class="num-cell" data-value="71">71</td>
+            <td class="num-cell" data-value="7.84">7,84</td>
+            <td class="num-cell" data-value="50"><strong>50</strong></td>
+        </tr><tr>
+            <td class="project-name">Ohne Gül</td>
+            <td class="num-cell" data-value="104">104</td>
+            <td class="num-cell" data-value="822.8">822,8 Std.</td>
+            <td class="num-cell" data-value="7.9">7,9 Std.</td>
+            <td class="num-cell" data-value="1270">1.270</td>
+            <td class="num-cell" data-value="1601">1.601</td>
+            <td class="num-cell" data-value="6119">6.119</td>
+            <td class="num-cell" data-value="59">59</td>
+            <td class="num-cell" data-value="7.44">7,44</td>
+            <td class="num-cell" data-value="47"><strong>47</strong></td>
+        </tr><tr>
+            <td class="project-name">Ohne Sponsor</td>
+            <td class="num-cell" data-value="125">125</td>
+            <td class="num-cell" data-value="994.8">994,8 Std.</td>
+            <td class="num-cell" data-value="8.0">8,0 Std.</td>
+            <td class="num-cell" data-value="1260">1.260</td>
+            <td class="num-cell" data-value="1671">1.671</td>
+            <td class="num-cell" data-value="7230">7.230</td>
+            <td class="num-cell" data-value="58">58</td>
+            <td class="num-cell" data-value="7.27">7,27</td>
+            <td class="num-cell" data-value="46"><strong>46</strong></td>
+        </tr><tr>
+            <td class="project-name">Alle Streams</td>
+            <td class="num-cell" data-value="136">136</td>
+            <td class="num-cell" data-value="1037.9">1037,9 Std.</td>
+            <td class="num-cell" data-value="7.6">7,6 Std.</td>
+            <td class="num-cell" data-value="1249">1.249</td>
+            <td class="num-cell" data-value="1640">1.640</td>
+            <td class="num-cell" data-value="7439">7.439</td>
+            <td class="num-cell" data-value="55">55</td>
+            <td class="num-cell" data-value="7.17">7,17</td>
+            <td class="num-cell" data-value="45"><strong>45</strong></td>
+        </tr><tr>
+            <td class="project-name">Ohne Adrian</td>
+            <td class="num-cell" data-value="135">135</td>
+            <td class="num-cell" data-value="1035.8">1035,8 Std.</td>
+            <td class="num-cell" data-value="7.7">7,7 Std.</td>
+            <td class="num-cell" data-value="1250">1.250</td>
+            <td class="num-cell" data-value="1646">1.646</td>
+            <td class="num-cell" data-value="7421">7.421</td>
+            <td class="num-cell" data-value="55">55</td>
+            <td class="num-cell" data-value="7.16">7,16</td>
+            <td class="num-cell" data-value="45"><strong>45</strong></td>
+        </tr><tr>
+            <td class="project-name">Ohne Jonsman</td>
+            <td class="num-cell" data-value="135">135</td>
+            <td class="num-cell" data-value="1033.6">1033,6 Std.</td>
+            <td class="num-cell" data-value="7.7">7,7 Std.</td>
+            <td class="num-cell" data-value="1249">1.249</td>
+            <td class="num-cell" data-value="1643">1.643</td>
+            <td class="num-cell" data-value="7415">7.415</td>
+            <td class="num-cell" data-value="55">55</td>
+            <td class="num-cell" data-value="7.17">7,17</td>
+            <td class="num-cell" data-value="45"><strong>45</strong></td>
+        </tr><tr>
+            <td class="project-name">Ohne Junicats</td>
+            <td class="num-cell" data-value="134">134</td>
+            <td class="num-cell" data-value="1028.4">1028,4 Std.</td>
+            <td class="num-cell" data-value="7.7">7,7 Std.</td>
+            <td class="num-cell" data-value="1251">1.251</td>
+            <td class="num-cell" data-value="1642">1.642</td>
+            <td class="num-cell" data-value="7385">7.385</td>
+            <td class="num-cell" data-value="55">55</td>
+            <td class="num-cell" data-value="7.18">7,18</td>
+            <td class="num-cell" data-value="45"><strong>45</strong></td>
+        </tr><tr>
+            <td class="project-name">Ohne Organisation</td>
+            <td class="num-cell" data-value="126">126</td>
+            <td class="num-cell" data-value="994.6">994,6 Std.</td>
+            <td class="num-cell" data-value="7.9">7,9 Std.</td>
+            <td class="num-cell" data-value="1256">1.256</td>
+            <td class="num-cell" data-value="1654">1.654</td>
+            <td class="num-cell" data-value="7184">7.184</td>
+            <td class="num-cell" data-value="57">57</td>
+            <td class="num-cell" data-value="7.22">7,22</td>
+            <td class="num-cell" data-value="45"><strong>45</strong></td>
+        </tr><tr>
+            <td class="project-name">Ohne HandofBlood</td>
+            <td class="num-cell" data-value="133">133</td>
+            <td class="num-cell" data-value="1017.3">1017,3 Std.</td>
+            <td class="num-cell" data-value="7.6">7,6 Std.</td>
+            <td class="num-cell" data-value="1262">1.262</td>
+            <td class="num-cell" data-value="1656">1.656</td>
+            <td class="num-cell" data-value="7147">7.147</td>
+            <td class="num-cell" data-value="54">54</td>
+            <td class="num-cell" data-value="7.03">7,03</td>
+            <td class="num-cell" data-value="44"><strong>44</strong></td>
+        </tr><tr>
+            <td class="project-name">Ohne Sandro</td>
+            <td class="num-cell" data-value="132">132</td>
+            <td class="num-cell" data-value="997.7">997,7 Std.</td>
+            <td class="num-cell" data-value="7.6">7,6 Std.</td>
+            <td class="num-cell" data-value="1227">1.227</td>
+            <td class="num-cell" data-value="1599">1.599</td>
+            <td class="num-cell" data-value="7123">7.123</td>
+            <td class="num-cell" data-value="54">54</td>
+            <td class="num-cell" data-value="7.14">7,14</td>
+            <td class="num-cell" data-value="44"><strong>44</strong></td>
+        </tr><tr>
+            <td class="project-name">Mit HandofBlood</td>
+            <td class="num-cell" data-value="3">3</td>
+            <td class="num-cell" data-value="20.6">20,6 Std.</td>
+            <td class="num-cell" data-value="6.9">6,9 Std.</td>
+            <td class="num-cell" data-value="591">591</td>
+            <td class="num-cell" data-value="938">938</td>
+            <td class="num-cell" data-value="292">292</td>
+            <td class="num-cell" data-value="97">97</td>
+            <td class="num-cell" data-value="14.17">14,17</td>
+            <td class="num-cell" data-value="42"><strong>42</strong></td>
+        </tr><tr>
+            <td class="project-name">Ohne Dean</td>
+            <td class="num-cell" data-value="127">127</td>
+            <td class="num-cell" data-value="794.5">794,5 Std.</td>
+            <td class="num-cell" data-value="6.3">6,3 Std.</td>
+            <td class="num-cell" data-value="1185">1.185</td>
+            <td class="num-cell" data-value="1547">1.547</td>
+            <td class="num-cell" data-value="5210">5.210</td>
+            <td class="num-cell" data-value="41">41</td>
+            <td class="num-cell" data-value="6.56">6,56</td>
+            <td class="num-cell" data-value="39"><strong>39</strong></td>
+        </tr><tr>
+            <td class="project-name">Nur Solo (Ohne Mitstreamer)</td>
+            <td class="num-cell" data-value="66">66</td>
+            <td class="num-cell" data-value="402.4">402,4 Std.</td>
+            <td class="num-cell" data-value="6.1">6,1 Std.</td>
+            <td class="num-cell" data-value="1201">1.201</td>
+            <td class="num-cell" data-value="1477">1.477</td>
+            <td class="num-cell" data-value="2455">2.455</td>
+            <td class="num-cell" data-value="37">37</td>
+            <td class="num-cell" data-value="6.10">6,10</td>
+            <td class="num-cell" data-value="37"><strong>37</strong></td>
+        </tr><tr>
+            <td class="project-name">Mit Gül</td>
+            <td class="num-cell" data-value="32">32</td>
+            <td class="num-cell" data-value="215.1">215,1 Std.</td>
+            <td class="num-cell" data-value="6.7">6,7 Std.</td>
+            <td class="num-cell" data-value="1166">1.166</td>
+            <td class="num-cell" data-value="1767">1.767</td>
+            <td class="num-cell" data-value="1320">1.320</td>
+            <td class="num-cell" data-value="41">41</td>
+            <td class="num-cell" data-value="6.14">6,14</td>
+            <td class="num-cell" data-value="36"><strong>36</strong></td>
+        </tr><tr>
+            <td class="project-name">Ohne Ronny</td>
+            <td class="num-cell" data-value="119">119</td>
+            <td class="num-cell" data-value="725.1">725,1 Std.</td>
+            <td class="num-cell" data-value="6.1">6,1 Std.</td>
+            <td class="num-cell" data-value="1195">1.195</td>
+            <td class="num-cell" data-value="1563">1.563</td>
+            <td class="num-cell" data-value="4424">4.424</td>
+            <td class="num-cell" data-value="37">37</td>
+            <td class="num-cell" data-value="6.10">6,10</td>
+            <td class="num-cell" data-value="36"><strong>36</strong></td>
+        </tr><tr>
+            <td class="project-name">Mit Organisation</td>
+            <td class="num-cell" data-value="10">10</td>
+            <td class="num-cell" data-value="43.3">43,3 Std.</td>
+            <td class="num-cell" data-value="4.3">4,3 Std.</td>
+            <td class="num-cell" data-value="1087">1.087</td>
+            <td class="num-cell" data-value="1469">1.469</td>
+            <td class="num-cell" data-value="255">255</td>
+            <td class="num-cell" data-value="26">26</td>
+            <td class="num-cell" data-value="5.89">5,89</td>
+            <td class="num-cell" data-value="32"><strong>32</strong></td>
+        </tr><tr>
+            <td class="project-name">Mit Jonsman</td>
+            <td class="num-cell" data-value="1">1</td>
+            <td class="num-cell" data-value="4.3">4,3 Std.</td>
+            <td class="num-cell" data-value="4.3">4,3 Std.</td>
+            <td class="num-cell" data-value="1110">1.110</td>
+            <td class="num-cell" data-value="1317">1.317</td>
+            <td class="num-cell" data-value="24">24</td>
+            <td class="num-cell" data-value="24">24</td>
+            <td class="num-cell" data-value="5.58">5,58</td>
+            <td class="num-cell" data-value="31"><strong>31</strong></td>
+        </tr><tr>
+            <td class="project-name">Mit Junicats</td>
+            <td class="num-cell" data-value="2">2</td>
+            <td class="num-cell" data-value="9.5">9,5 Std.</td>
+            <td class="num-cell" data-value="4.8">4,8 Std.</td>
+            <td class="num-cell" data-value="993">993</td>
+            <td class="num-cell" data-value="1493">1.493</td>
+            <td class="num-cell" data-value="54">54</td>
+            <td class="num-cell" data-value="27">27</td>
+            <td class="num-cell" data-value="5.68">5,68</td>
+            <td class="num-cell" data-value="28"><strong>28</strong></td>
+        </tr><tr>
+            <td class="project-name">Mit Adrian</td>
+            <td class="num-cell" data-value="1">1</td>
+            <td class="num-cell" data-value="2.1">2,1 Std.</td>
+            <td class="num-cell" data-value="2.1">2,1 Std.</td>
+            <td class="num-cell" data-value="636">636</td>
+            <td class="num-cell" data-value="823">823</td>
+            <td class="num-cell" data-value="18">18</td>
+            <td class="num-cell" data-value="18">18</td>
+            <td class="num-cell" data-value="8.57">8,57</td>
+            <td class="num-cell" data-value="27"><strong>27</strong></td>
+        </tr><tr>
+            <td class="project-name">Mit Sponsor</td>
+            <td class="num-cell" data-value="11">11</td>
+            <td class="num-cell" data-value="43.1">43,1 Std.</td>
+            <td class="num-cell" data-value="3.9">3,9 Std.</td>
+            <td class="num-cell" data-value="986">986</td>
+            <td class="num-cell" data-value="1288">1.288</td>
+            <td class="num-cell" data-value="209">209</td>
+            <td class="num-cell" data-value="19">19</td>
+            <td class="num-cell" data-value="4.85">4,85</td>
+            <td class="num-cell" data-value="24"><strong>24</strong></td>
+        </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <footer>
+        Streams von Knirpz nach Projekten geordnet • 32 Projekte ausgewertet • 136 Streams gesamt
+    </footer>
+</div>
+
+<script>
+let sortDirections = {};
+
+function filterProjects() {
+    const showSingle = document.getElementById('filterSingle') ? document.getElementById('filterSingle').checked : true;
+    const showMedium = document.getElementById('filterMedium') ? document.getElementById('filterMedium').checked : true;
+    const showLarge = document.getElementById('filterLarge') ? document.getElementById('filterLarge').checked : true;
+
+    const rows = document.querySelectorAll('#projectsTable tbody tr');
+    rows.forEach(row => {
+        const streams = parseInt(row.getAttribute('data-streams') || '0', 10);
+        let isVisible = false;
+
+        if (streams === 1 && showSingle) {
+            isVisible = true;
+        } else if (streams >= 2 && streams <= 6 && showMedium) {
+            isVisible = true;
+        } else if (streams >= 7 && showLarge) {
+            isVisible = true;
+        }
+
+        row.style.display = isVisible ? '' : 'none';
+    });
+}
+
+function sortTable(tableId, columnIndex, type) {
+    const table = document.getElementById(tableId);
+    const tbody = table.querySelector("tbody");
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+    const headers = table.querySelectorAll("th");
+
+    const sortKey = `${tableId}_${columnIndex}`;
+    let newDirection;
+    if (!sortDirections[sortKey]) {
+        newDirection = 'desc';
+    } else {
+        newDirection = sortDirections[sortKey] === 'desc' ? 'asc' : 'desc';
+    }
+    sortDirections[sortKey] = newDirection;
+
+    headers.forEach((th) => {
+        th.classList.remove('sort-active');
+        const icon = th.querySelector('.sort-icon');
+        if (icon) icon.textContent = '⇅';
+    });
+
+    const activeHeader = headers[columnIndex];
+    if (activeHeader) {
+        activeHeader.classList.add('sort-active');
+        const activeIcon = activeHeader.querySelector('.sort-icon');
+        if (activeIcon) {
+            activeIcon.textContent = newDirection === 'asc' ? '▲' : '▼';
+        }
+    }
+
+    rows.sort((a, b) => {
+        let cellA = a.children[columnIndex];
+        let cellB = b.children[columnIndex];
+        let valA, valB;
+
+        if (type === 'number' || type === 'date') {
+            valA = parseFloat(cellA.getAttribute('data-value') || 0);
+            valB = parseFloat(cellB.getAttribute('data-value') || 0);
+        } else {
+            valA = cellA.textContent.trim().toLowerCase();
+            valB = cellB.textContent.trim().toLowerCase();
+        }
+
+        if (valA < valB) return newDirection === 'asc' ? -1 : 1;
+        if (valA > valB) return newDirection === 'asc' ? 1 : -1;
+        return 0;
+    });
+
+    rows.forEach(row => tbody.appendChild(row));
+}
+filterProjects();
+</script>
+
+</body>
+</html>
